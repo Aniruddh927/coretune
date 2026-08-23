@@ -116,7 +116,7 @@ function cardHTML(p) {
       <h3 class="card-name">${esc(p.name)}</h3>
       ${specs ? `<div class="specs">${specs}</div>` : ''}
       <div class="card-foot">
-        <span class="price">${money(p)}</span>
+        <span class="price">${esc(money(p))}</span>
         <button class="btn-add ${out ? 'disabled' : ''}" data-add="${esc(p.id)}" ${out ? 'disabled' : ''}>${out ? 'Sold out' : 'Add'}</button>
       </div>
     </div>
@@ -155,7 +155,7 @@ function renderCart() {
       </div>
       <div class="cart-item-info">
         <p class="cart-item-name">${esc(p.name)}</p>
-        <span class="cart-item-price">${money(p)}</span>
+        <span class="cart-item-price">${esc(money(p))}</span>
         <div class="qty-controls">
           <button class="qty-btn" data-dec="${esc(c.id)}">\u2212</button>
           <span class="qty-val">${c.qty}</span>
@@ -338,14 +338,14 @@ async function init() {
   els.cartSubtotal = $('cartSubtotal');
   els.checkoutBtn = $('checkoutBtn');
   els.orderBackdrop = $('orderBackdrop');
-  els.brandName = $('brandName');
-  els.brandLogo = $('brandLogo');
-  els.brandMark = $('brandMark');
+  els.orderCloseBtn = $('orderCloseBtn');
   els.orderText = $('orderText');
   els.waBtn = $('waBtn');
   els.copyOrderBtn = $('copyOrderBtn');
   els.toast = $('toast');
   els.brandName = $('brandName');
+  els.brandLogo = $('brandLogo');
+  els.brandMark = $('brandMark');
   els.heroTitle = $('heroTitle');
   els.heroSub = $('heroSub');
   els.footerName = $('footerName');

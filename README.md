@@ -20,23 +20,23 @@ stock, prices, availability, and images straight from the browser.
 
 ## 1. Deploy to GitHub
 
-1. Create a repo on GitHub (e.g. `core-tune`) — **public** (free Pages; a
+1. Create a repo on GitHub (e.g. `coretune`) — **public** (free Pages; a
    private repo needs GitHub Pro for Pages).
 2. Push this folder:
 
    ```bash
-   cd core-tune
+   cd coretune
    git init
    git add -A
    git commit -m "init store"
    git branch -M main
-   git remote add origin https://github.com/YOURNAME/core-tune.git
+   git remote add origin https://github.com/YOURNAME/coretune.git
    git push -u origin main
    ```
 
 3. The `Deploy to GitHub Pages` action runs automatically. Then enable Pages:
    **Settings → Pages → Source → "Deploy from a branch" → Branch `gh-pages` / root → Save.**
-4. Your site is live at `https://YOURNAME.github.io/core-tune/` in ~1 minute.
+4. Your site is live at `https://YOURNAME.github.io/coretune/` in ~1 minute.
 
 ## 2. Add products + images
 

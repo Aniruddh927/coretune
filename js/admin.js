@@ -1,7 +1,7 @@
 'use strict';
 
 /* ==========================================================================
-   GreyWatt admin — edit catalog, commit straight to GitHub via the Trees API.
+   Core Tune admin — edit catalog, commit straight to GitHub via the Trees API.
    Token stays in localStorage; content changes land as a single commit.
    ========================================================================== */
 
@@ -126,6 +126,18 @@ async function commitChanges(message, files) {
 
 /* ---- connect / load --------------------------------------------------- */
 
+
+function applyLogo(site) {
+  const logo = (site && site.logo) || '';
+  if (logo && els.brandLogo) {
+    els.brandLogo.src = logo;
+    els.brandLogo.hidden = false;
+    if (els.brandMark) els.brandMark.hidden = true;
+  } else {
+    if (els.brandLogo) els.brandLogo.hidden = true;
+    if (els.brandMark) els.brandMark.hidden = false;
+  }
+}
 async function loadConfig() {
   try {
     const res = await fetch('data/site.json', { cache: 'no-store' });
@@ -140,6 +152,7 @@ async function loadConfig() {
       els.sCurrency.value = site.currency || '';
       els.sWhatsapp.value = site.whatsapp || '';
       els.sEmail.value = site.email || '';
+      applyLogo(site);
     }
   } catch (e) { console.warn('site.json not available', e); }
 }
@@ -176,6 +189,7 @@ async function connect() {
     els.sCurrency.value = admin.site.currency || '';
     els.sWhatsapp.value = admin.site.whatsapp || '';
     els.sEmail.value = admin.site.email || '';
+    applyLogo(admin.site);
     els.cOwner.value = admin.owner;
     els.cRepo.value = admin.repo;
     els.cBranch.value = admin.branch;
@@ -477,6 +491,8 @@ function init() {
   els.repoLabel = $('repoLabel');
   els.toast = $('toast');
   ['sName', 'sTagline', 'sCurrency', 'sWhatsapp', 'sEmail'].forEach((id) => { els[id] = $(id); });
+  els.brandLogo = $('brandLogo');
+  els.brandMark = $('brandMark');
 
   loadConfig().then(() => {
     const token = localStorage.getItem(TOKEN_KEY);

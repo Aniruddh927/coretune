@@ -1,7 +1,7 @@
 'use strict';
 
 /* ==========================================================================
-   GreyWatt storefront — catalog + cart + order
+   Core Tune storefront — catalog + cart + order
    ========================================================================== */
 
 const state = {
@@ -175,7 +175,7 @@ function buildOrderText() {
     if (!p) return null;
     return `${p.name} \u00d7 ${c.qty} = ${money({ price: Number(p.price) * c.qty })}`;
   }).filter(Boolean);
-  const header = `New order \u2014 ${state.site.storeName || 'GreyWatt Components'}`;
+  const header = `New order \u2014 ${state.site.storeName || 'Core Tune'}`;
   lines.push('', `Total: ${money({ price: cartSubtotal() })}`);
   return [header, '', ...lines].join('\n');
 }
@@ -300,16 +300,21 @@ function bind() {
 
 function applySite() {
   const site = state.site || {};
-  const name = site.storeName || 'GreyWatt Components';
+  const name = site.storeName || 'Core Tune';
   const tag = site.tagline || 'PC parts, honest prices.';
   document.title = name;
-  els.brandName.textContent = name.split(' ')[0] || 'GreyWatt';
+  els.brandName.textContent = name;
   els.heroTitle.textContent = 'Build it. Ship it.';
   els.heroSub.textContent = tag;
   els.footerName.textContent = name;
   els.footerTag.textContent = 'Prices auto-sync from supplier PDFs.';
   if (site.email) {
     els.footerTag.textContent += ` \u00b7 ${site.email}`;
+  }
+  if (site.logo && els.brandLogo) {
+    els.brandLogo.src = site.logo;
+    els.brandLogo.hidden = false;
+    if (els.brandMark) els.brandMark.hidden = true;
   }
 }
 
@@ -333,7 +338,9 @@ async function init() {
   els.cartSubtotal = $('cartSubtotal');
   els.checkoutBtn = $('checkoutBtn');
   els.orderBackdrop = $('orderBackdrop');
-  els.orderCloseBtn = $('orderCloseBtn');
+  els.brandName = $('brandName');
+  els.brandLogo = $('brandLogo');
+  els.brandMark = $('brandMark');
   els.orderText = $('orderText');
   els.waBtn = $('waBtn');
   els.copyOrderBtn = $('copyOrderBtn');

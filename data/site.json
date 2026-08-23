@@ -1,12 +1,13 @@
 {
-  "storeName": "CoreTune",
+  "storeName": "Core Tune",
   "tagline": "PC parts, honest prices, updated from live supplier sheets.",
   "currency": "Rs",
   "whatsapp": "",
   "email": "coretunecomputers@gmail.com",
+  "logo": "",
   "github": {
     "owner": "Aniruddh927",
-    "repo": "pc-parts-store",
+    "repo": "core-tune",
     "branch": "main"
   }
 }

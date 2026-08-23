@@ -1,5 +1,5 @@
 /* ==========================================================================
-   GreyWatt Components — black/grey theme
+   Core Tune — black/grey theme
    ========================================================================== */
 
 :root {
@@ -28,6 +28,10 @@
 }
 
 * { box-sizing: border-box; }
+
+[hidden] { display: none !important; }
+
+.brand-logo { height: 32px; width: auto; border-radius: 6px; object-fit: contain; }
 
 html { scroll-behavior: smooth; }
 

@@ -1,7 +1,7 @@
 'use strict';
 
 /* ==========================================================================
-   GreyWatt price updater
+   Core Tune price updater
    --------------------------------------------------------------------------
    Finds the newest PDF in ../prices, extracts text, and updates the `price`
    field of each product in ../data/products.json that matches a search key.

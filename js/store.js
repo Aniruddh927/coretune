@@ -47,12 +47,12 @@ async function fetchJSON(url) {
 function money(p) {
   const sym = (p && p.currency) || state.site.currency || '$';
   const n = Number(p && p.price);
-  if (!Number.isFinite(n)) return sym + '0';
+  if (!Number.isFinite(n)) return sym + ' 0';
   const frac = Math.abs(n % 1) > 1e-9;
   const s = n.toLocaleString('en-US', frac
     ? { minimumFractionDigits: 2, maximumFractionDigits: 2 }
     : { maximumFractionDigits: 0 });
-  return sym + s;
+  return sym + ' ' + s;
 }
 
 function findProduct(id) { return state.products.find((p) => p.id === id); }

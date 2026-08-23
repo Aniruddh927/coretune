@@ -344,16 +344,39 @@ function removeProduct(idx) {
   renderProducts();
 }
 
+const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+
+function sniffImageType(base64) {
+  const h = (base64 || '').slice(0, 12);
+  if (h.startsWith('iVBOR')) return 'image/png';      // PNG
+  if (h.startsWith('/9j/')) return 'image/jpeg';      // JPEG
+  if (h.startsWith('R0lG')) return 'image/gif';       // GIF
+  if (h.startsWith('UklGR')) return 'image/webp';     // WebP (RIFF)
+  return null;
+}
+
+const EXT_FOR_TYPE = { 'image/png': '.png', 'image/jpeg': '.jpg', 'image/webp': '.webp', 'image/gif': '.gif' };
+
 function onUpload(idx, file) {
   if (!file) return;
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    showToast('Only PNG, JPG, WebP or GIF images are allowed');
+    return;
+  }
   const reader = new FileReader();
   reader.onload = () => {
     const dataUrl = reader.result;
+    const base64 = dataUrl.split(',')[1] || '';
+    const type = sniffImageType(base64);
+    if (!type) {
+      showToast('File content is not a valid image');
+      return;
+    }
     admin.products[idx]._upload = {
       file,
       dataUrl,
-      base64: dataUrl.split(',')[1],
-      ext: (file.name.match(/\.\w+$/) || ['.jpg'])[0].toLowerCase(),
+      base64,
+      ext: EXT_FOR_TYPE[type],   // canonical extension from magic bytes, never the filename
     };
     admin.dirty = true;
     updateDirty();

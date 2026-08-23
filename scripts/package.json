@@ -1,0 +1,10 @@
+{
+  "name": "greywatt-price-updater",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Parses the newest supplier PDF in ../prices and updates ../data/products.json.",
+  "dependencies": {
+    "pdfjs-dist": "4.10.38"
+  }
+}

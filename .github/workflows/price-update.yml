@@ -1,0 +1,55 @@
+name: Price Update
+
+on:
+  schedule:
+    # runs daily at 03:00 UTC — adjust to your supplier's schedule
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+  push:
+    paths:
+      - 'prices/**'
+      - '!prices/.last_processed'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: price-update
+  cancel-in-progress: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install deps
+        run: npm install --prefix scripts --no-audit --no-fund
+
+      - name: Update prices
+        run: node scripts/update_prices.mjs
+
+      - name: Commit price changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/products.json prices/.last_processed
+          if git diff --cached --quiet; then
+            echo "no changes to commit"
+          else
+            git commit -m "chore: update prices from PDF"
+            git push
+          fi
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
+          publish_branch: gh-pages
+          enable_jekyll: false
+          exclude_assets: 'scripts,prices,.github,README.md,.gitignore'

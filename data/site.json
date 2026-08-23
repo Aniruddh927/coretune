@@ -1,0 +1,12 @@
+{
+  "storeName": "GreyWatt Components",
+  "tagline": "PC parts, honest prices, updated from live supplier sheets.",
+  "currency": "$",
+  "whatsapp": "",
+  "email": "",
+  "github": {
+    "owner": "Aniruddh927",
+    "repo": "pc-parts-store",
+    "branch": "main"
+  }
+}

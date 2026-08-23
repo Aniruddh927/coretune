@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GreyWatt Components</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%230b0b0d'/%3E%3Cpath d='M13 2 5 14h6l-1 8 8-12h-6l1-8z' fill='%23a3e635'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="#" class="brand" aria-label="Home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="18" height="18"><path d="M13 2 5 14h6l-1 8 8-12h-6l1-8z" fill="currentColor"/></svg>
+        </span>
+        <span class="brand-name" id="brandName">GreyWatt</span>
+        <span class="brand-sub" id="brandSub">Components</span>
+      </a>
+      <nav class="header-nav">
+        <a href="#products" class="nav-link">Shop</a>
+        <a href="#categories" class="nav-link">Categories</a>
+        <a href="admin.html" class="nav-link nav-admin">Manage</a>
+      </nav>
+      <div class="header-actions">
+        <button class="cart-btn" id="cartBtn" aria-label="Open cart">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          <span class="cart-count" id="cartCount">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-inner">
+        <p class="hero-eyebrow" id="heroEyebrow">New stock · prices updated daily</p>
+        <h1 class="hero-title" id="heroTitle">Build it. Ship it.</h1>
+        <p class="hero-sub" id="heroSub">PC parts, honest prices, updated from live supplier sheets.</p>
+        <a href="#products" class="btn btn-primary">Browse parts</a>
+      </div>
+    </section>
+
+    <section class="toolbar container" id="categories">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="searchInput" type="text" placeholder="Search CPUs, GPUs, RAM, PSUs…" autocomplete="off">
+      </div>
+      <div class="chips" id="categoryChips" role="tablist" aria-label="Categories"></div>
+    </section>
+
+    <section class="container" id="products">
+      <div class="grid" id="productGrid"></div>
+      <div class="empty" id="emptyState" hidden>
+        <p>No parts match your search.</p>
+        <button class="btn btn-ghost" id="clearSearchBtn">Clear search</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span id="footerName">GreyWatt Components</span>
+      <span class="footer-muted" id="footerTag">Prices auto-sync from supplier PDFs.</span>
+    </div>
+  </footer>
+
+  <!-- Cart drawer -->
+  <div class="cart-overlay" id="cartOverlay" hidden></div>
+  <aside class="cart-drawer" id="cartDrawer" aria-hidden="true">
+    <div class="cart-head">
+      <h2>Your cart</h2>
+      <button class="icon-btn" id="cartCloseBtn" aria-label="Close cart">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-empty" id="cartEmpty">
+      <p>Cart is empty.</p>
+      <button class="btn btn-ghost" id="cartEmptyBtn">Browse parts</button>
+    </div>
+    <div class="cart-foot" id="cartFoot" hidden>
+      <div class="cart-row"><span>Subtotal</span><span class="price" id="cartSubtotal">$0</span></div>
+      <button class="btn btn-primary btn-block" id="checkoutBtn">Checkout</button>
+    </div>
+  </aside>
+
+  <!-- Order modal -->
+  <div class="modal-backdrop" id="orderBackdrop" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="orderTitle">
+      <div class="modal-head">
+        <h2 id="orderTitle">Your order</h2>
+        <button class="icon-btn" id="orderCloseBtn" aria-label="Close">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <p class="muted">Send this order to confirm. We'll reserve your parts.</p>
+      <textarea id="orderText" class="order-text" rows="8" readonly></textarea>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="copyOrderBtn">Copy order</button>
+        <a class="btn btn-primary" id="waBtn" href="#" target="_blank" rel="noopener" hidden>Send on WhatsApp</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/store.js"></script>
+</body>
+</html>

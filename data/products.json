@@ -1,0 +1,149 @@
+[
+  {
+    "id": "cpu-7600x",
+    "name": "AMD Ryzen 5 7600X",
+    "category": "CPU",
+    "price": 219,
+    "availability": "in_stock",
+    "stock": 12,
+    "image": "images/ryzen-7600x.png",
+    "specs": [
+      "6 cores",
+      "12 threads",
+      "4.7 GHz",
+      "AM5"
+    ],
+    "searchKeys": [
+      "Ryzen 5 7600X",
+      "7600X"
+    ]
+  },
+  {
+    "id": "gpu-4070s",
+    "name": "NVIDIA GeForce RTX 4070 Super",
+    "category": "GPU",
+    "price": 599,
+    "availability": "in_stock",
+    "stock": 5,
+    "image": "images/rtx-4070-super.png",
+    "specs": [
+      "12 GB GDDR6X",
+      "7168 CUDA cores",
+      "2475 MHz"
+    ],
+    "searchKeys": [
+      "RTX 4070 Super",
+      "4070 Super"
+    ]
+  },
+  {
+    "id": "ram-32",
+    "name": "Corsair Vengeance 32GB DDR5-6000",
+    "category": "RAM",
+    "price": 104,
+    "availability": "in_stock",
+    "stock": 30,
+    "image": "images/corsair-32gb.png",
+    "specs": [
+      "32 GB",
+      "DDR5",
+      "6000 MT/s",
+      "CL30"
+    ],
+    "searchKeys": [
+      "Vengeance 32GB",
+      "DDR5 6000"
+    ]
+  },
+  {
+    "id": "ssd-2tb",
+    "name": "Samsung 990 Pro 2TB NVMe",
+    "category": "Storage",
+    "price": 179,
+    "availability": "low_stock",
+    "stock": 3,
+    "image": "images/samsung-990pro.png",
+    "specs": [
+      "2 TB",
+      "PCIe 4.0",
+      "7450 MB/s read"
+    ],
+    "searchKeys": [
+      "990 Pro 2TB",
+      "990 Pro"
+    ]
+  },
+  {
+    "id": "psu-850",
+    "name": "Corsair RM850x 850W Gold",
+    "category": "PSU",
+    "price": 134,
+    "availability": "in_stock",
+    "stock": 18,
+    "image": "images/rm850x.png",
+    "specs": [
+      "850 W",
+      "80+ Gold",
+      "Fully modular"
+    ],
+    "searchKeys": [
+      "RM850x",
+      "850W Gold"
+    ]
+  },
+  {
+    "id": "mobo-b650",
+    "name": "MSI MAG B650 Tomahawk WiFi",
+    "category": "Motherboard",
+    "price": 199,
+    "availability": "in_stock",
+    "stock": 9,
+    "image": "images/b650-tomahawk.png",
+    "specs": [
+      "AM5",
+      "ATX",
+      "WiFi 6E",
+      "PCIe 4.0"
+    ],
+    "searchKeys": [
+      "B650 Tomahawk",
+      "Tomahawk WiFi"
+    ]
+  },
+  {
+    "id": "case-h5",
+    "name": "NZXT H5 Flow",
+    "category": "Case",
+    "price": 94,
+    "availability": "out_of_stock",
+    "stock": 0,
+    "image": "images/nzxt-h5-flow.png",
+    "specs": [
+      "Mid tower",
+      "Tempered glass",
+      "2× 120mm fans"
+    ],
+    "searchKeys": [
+      "H5 Flow",
+      "NZXT H5"
+    ]
+  },
+  {
+    "id": "cooler-240",
+    "name": "Arctic Liquid Freezer III 240",
+    "category": "Cooling",
+    "price": 89,
+    "availability": "in_stock",
+    "stock": 14,
+    "image": "images/liquid-freezer-240.png",
+    "specs": [
+      "240 mm",
+      "AIO",
+      "AM5 / LGA1700"
+    ],
+    "searchKeys": [
+      "Liquid Freezer III 240",
+      "Freezer III 240"
+    ]
+  }
+]

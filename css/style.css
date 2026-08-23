@@ -23,15 +23,41 @@
   --radius: 14px;
   --radius-sm: 9px;
   --shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+  --header-bg: rgba(11, 11, 13, 0.78);
+  --badge-bg: rgba(11, 11, 13, 0.72);
   --font: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-display: "Space Grotesk", var(--font);
+}
+
+html[data-theme="light"] {
+  --bg: #f6f6f8;
+  --bg-2: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f0f0f3;
+  --surface-3: #e6e6eb;
+  --border: #d9d9df;
+  --border-soft: #ececf0;
+  --text: #16161b;
+  --text-2: #43434c;
+  --muted: #6f6f79;
+  --accent: #4d7c0f;
+  --accent-strong: #3f6212;
+  --accent-ink: #ffffff;
+  --ok: #16a34a;
+  --warn: #b45309;
+  --bad: #dc2626;
+  --pre: #2563eb;
+  --shadow: 0 10px 30px rgba(20, 20, 40, 0.10);
+  --header-bg: rgba(255, 255, 255, 0.82);
+  --badge-bg: rgba(255, 255, 255, 0.88);
 }
 
 * { box-sizing: border-box; }
 
 [hidden] { display: none !important; }
 
-.brand-logo { height: 32px; width: auto; border-radius: 6px; object-fit: contain; }
+.brand-logo { height: 32px; width: auto; border-radius: 6px; object-fit: contain; filter: brightness(0) invert(1); }
+html[data-theme="light"] .brand-logo { filter: brightness(0); }
 
 html { scroll-behavior: smooth; }
 
@@ -65,7 +91,7 @@ img { display: block; max-width: 100%; }
   position: sticky;
   top: 0;
   z-index: 50;
-  background: rgba(11, 11, 13, 0.78);
+  background: var(--header-bg);
   backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--border-soft);
 }
@@ -122,6 +148,22 @@ img { display: block; max-width: 100%; }
 .nav-admin { color: var(--muted); }
 
 .header-actions { display: flex; align-items: center; gap: 10px; }
+
+.theme-btn {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.theme-btn:hover { border-color: var(--accent); background: var(--surface-2); }
+.theme-btn .icon-moon { display: none; }
+html[data-theme="light"] .theme-btn .icon-moon { display: block; }
+html[data-theme="light"] .theme-btn .icon-sun { display: none; }
 
 .cart-btn {
   position: relative;
@@ -360,7 +402,7 @@ img { display: block; max-width: 100%; }
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.02em;
-  background: rgba(11, 11, 13, 0.72);
+  background: var(--badge-bg);
   backdrop-filter: blur(6px);
   border: 1px solid var(--border);
 }

@@ -85,15 +85,19 @@ async function listImages() {
   return data.filter((f) => f.type === 'file').map((f) => ({ name: f.name, path: f.path, sha: f.sha }));
 }
 
-async function commitViaFunction(message, files) {
+async function callFunction(body) {
   const res = await fetch('/.netlify/functions/commit', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ password: admin.password, message, files }),
+    body: JSON.stringify(body),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
   return data;
+}
+
+async function commitViaFunction(message, files) {
+  return callFunction({ password: admin.password, message, files });
 }
 
 /* ---- connect / load --------------------------------------------------- */
@@ -136,6 +140,15 @@ async function unlock() {
     return;
   }
   localStorage.setItem(PASS_KEY, admin.password);
+
+  // verify the password against the server before unlocking
+  try {
+    await callFunction({ password: admin.password, action: 'verify' });
+  } catch (e) {
+    localStorage.removeItem(PASS_KEY);
+    showToast(e.message === 'Incorrect password' ? 'Incorrect password' : e.message);
+    return;
+  }
 
   try {
     const [siteText, prodText] = await Promise.all([

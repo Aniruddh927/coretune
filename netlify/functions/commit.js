@@ -38,6 +38,10 @@ exports.handler = async (event) => {
   let body;
   try { body = JSON.parse(event.body || '{}'); } catch { return json(400, { error: 'Invalid JSON' }); }
 
+  if (body.action === 'verify') {
+    return body.password === PASSWORD ? json(200, { ok: true }) : json(401, { error: 'Incorrect password' });
+  }
+
   if (body.password !== PASSWORD) return json(401, { error: 'Incorrect password' });
 
   const files = body.files;

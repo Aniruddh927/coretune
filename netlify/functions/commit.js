@@ -1,10 +1,25 @@
 // Server-side commit for the Core Tune admin.
 // The owner's GitHub PAT lives in Netlify env vars (never in a browser) and
-// writes are gated behind a shared ADMIN_PASSWORD. No client-side token needed.
+// writes are gated behind a shared ADMIN_PASSWORD. File paths are strictly
+// whitelisted so a leaked password can only touch catalog files, not HTML/JS/
+// workflows.
 
 const OWNER = process.env.GITHUB_OWNER || 'Aniruddh927';
 const REPO = process.env.GITHUB_REPO || 'coretune';
 const BRANCH = process.env.GITHUB_BRANCH || 'main';
+
+const MAX_TEXT_BYTES = 1024 * 1024;       // 1 MB
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;  // 5 MB
+const MAX_FILES = 100;
+
+// magic-byte prefix for each allowed image type (content must match extension)
+const IMAGE_MAGIC = {
+  png:  [0x89, 0x50, 0x4e, 0x47],
+  jpg:  [0xff, 0xd8, 0xff],
+  jpeg: [0xff, 0xd8, 0xff],
+  gif:  [0x47, 0x49, 0x46, 0x38],
+  webp: [0x52, 0x49, 0x46, 0x46],
+};
 
 const json = (status, body) => ({
   statusCode: status,
@@ -45,8 +60,12 @@ exports.handler = async (event) => {
   if (body.password !== PASSWORD) return json(401, { error: 'Incorrect password' });
 
   const files = body.files;
-  const message = body.message || 'chore: update catalog via admin';
+  const message = (typeof body.message === 'string' && body.message.slice(0, 200)) || 'chore: update catalog via admin';
   if (!Array.isArray(files) || files.length === 0) return json(400, { error: 'files required' });
+  if (files.length > MAX_FILES) return json(400, { error: 'Too many files' });
+
+  try { validateFiles(files); }
+  catch (e) { return json(400, { error: String((e && e.message) || e) }); }
 
   try {
     const sha = await commitChanges(message, files, PAT);
@@ -55,6 +74,37 @@ exports.handler = async (event) => {
     return json(500, { error: String((e && e.message) || e) });
   }
 };
+
+function validateFiles(files) {
+  for (const f of files) {
+    if (!f || typeof f.path !== 'string' || f.path.length > 300) {
+      throw new Error('Invalid file entry');
+    }
+
+    if (f.path === 'data/products.json' || f.path === 'data/site.json') {
+      if (typeof f.content !== 'string') throw new Error('Invalid content for ' + f.path);
+      if (Buffer.byteLength(f.content, 'utf8') > MAX_TEXT_BYTES) throw new Error('File too large: ' + f.path);
+      continue;
+    }
+
+    const m = /^images\/[A-Za-z0-9._-]+\.(png|jpe?g|webp|gif)$/i.exec(f.path);
+    if (!m) throw new Error('Path not allowed: ' + f.path);
+    const ext = m[1].toLowerCase();
+
+    if (f.content === null) continue; // image deletion
+
+    if (!f.base64 || typeof f.content !== 'string') throw new Error('Image must be base64: ' + f.path);
+    const buf = Buffer.from(f.content, 'base64');
+    if (buf.length > MAX_IMAGE_BYTES) throw new Error('Image too large: ' + f.path);
+
+    const magic = IMAGE_MAGIC[ext];
+    if (magic && buf.length >= magic.length) {
+      for (let i = 0; i < magic.length; i++) {
+        if (buf[i] !== magic[i]) throw new Error('Image content does not match extension: ' + f.path);
+      }
+    }
+  }
+}
 
 async function ghApi(path, opts, token) {
   const headers = {

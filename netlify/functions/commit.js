@@ -11,6 +11,7 @@ const BRANCH = process.env.GITHUB_BRANCH || 'main';
 const MAX_TEXT_BYTES = 1024 * 1024;       // 1 MB
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;  // 5 MB
 const MAX_FILES = 100;
+const AUTH_FAIL_DELAY_MS = 800;           // slows brute force
 
 // magic-byte prefix for each allowed image type (content must match extension)
 const IMAGE_MAGIC = {
@@ -23,41 +24,44 @@ const IMAGE_MAGIC = {
 
 const json = (status, body) => ({
   statusCode: status,
-  headers: {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-  },
+  headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify(body),
 });
 
-exports.handler = async (event) => {
-  if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 204,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
-      },
-      body: '',
-    };
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function safeEqual(a, b) {
+  const sa = String(a == null ? '' : a);
+  const sb = String(b == null ? '' : b);
+  let diff = sa.length ^ sb.length;
+  for (let i = 0; i < Math.min(sa.length, sb.length); i++) {
+    diff |= sa.charCodeAt(i) ^ sb.charCodeAt(i);
   }
+  return diff === 0;
+}
+
+exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return json(405, { error: 'POST only' });
 
   const PAT = process.env.GITHUB_PAT;
   const PASSWORD = process.env.ADMIN_PASSWORD;
   if (!PAT || !PASSWORD) {
-    return json(500, { error: 'Server not configured: set GITHUB_PAT and ADMIN_PASSWORD env vars' });
+    return json(500, { error: 'Server not configured' });
   }
 
   let body;
   try { body = JSON.parse(event.body || '{}'); } catch { return json(400, { error: 'Invalid JSON' }); }
 
   if (body.action === 'verify') {
-    return body.password === PASSWORD ? json(200, { ok: true }) : json(401, { error: 'Incorrect password' });
+    if (safeEqual(body.password, PASSWORD)) return json(200, { ok: true });
+    await sleep(AUTH_FAIL_DELAY_MS);
+    return json(401, { error: 'Incorrect password' });
   }
 
-  if (body.password !== PASSWORD) return json(401, { error: 'Incorrect password' });
+  if (!safeEqual(body.password, PASSWORD)) {
+    await sleep(AUTH_FAIL_DELAY_MS);
+    return json(401, { error: 'Incorrect password' });
+  }
 
   const files = body.files;
   const message = (typeof body.message === 'string' && body.message.slice(0, 200)) || 'chore: update catalog via admin';
@@ -71,7 +75,8 @@ exports.handler = async (event) => {
     const sha = await commitChanges(message, files, PAT);
     return json(200, { ok: true, sha });
   } catch (e) {
-    return json(500, { error: String((e && e.message) || e) });
+    console.error('commit failed:', e && e.message);
+    return json(500, { error: 'Commit failed' });
   }
 };
 
@@ -97,12 +102,18 @@ function validateFiles(files) {
     const buf = Buffer.from(f.content, 'base64');
     if (buf.length > MAX_IMAGE_BYTES) throw new Error('Image too large: ' + f.path);
 
-    const magic = IMAGE_MAGIC[ext];
-    if (magic && buf.length >= magic.length) {
-      for (let i = 0; i < magic.length; i++) {
-        if (buf[i] !== magic[i]) throw new Error('Image content does not match extension: ' + f.path);
-      }
-    }
+    validateImageContent(f.path, ext, buf);
+  }
+}
+
+function validateImageContent(path, ext, buf) {
+  const magic = IMAGE_MAGIC[ext];
+  if (buf.length < magic.length) throw new Error('Image content does not match extension: ' + path);
+  for (let i = 0; i < magic.length; i++) {
+    if (buf[i] !== magic[i]) throw new Error('Image content does not match extension: ' + path);
+  }
+  if (ext === 'webp' && (buf.length < 12 || buf.toString('ascii', 8, 12) !== 'WEBP')) {
+    throw new Error('Image content does not match extension: ' + path);
   }
 }
 

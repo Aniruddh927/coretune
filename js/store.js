@@ -158,7 +158,7 @@ function renderCart() {
         <span class="cart-item-price">${esc(money(p))}</span>
         <div class="qty-controls">
           <button class="qty-btn" data-dec="${esc(c.id)}">\u2212</button>
-          <span class="qty-val">${c.qty}</span>
+          <span class="qty-val">${esc(c.qty)}</span>
           <button class="qty-btn" data-inc="${esc(c.id)}">+</button>
         </div>
       </div>

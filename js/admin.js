@@ -86,42 +86,59 @@ async function listImages() {
   return data.filter((f) => f.type === 'file').map((f) => ({ name: f.name, path: f.path, sha: f.sha }));
 }
 
+function isFastForwardError(e) {
+  return /fast.?forward|non-fast|behind|rejected|reference update/i.test(String((e && e.message) || ''));
+}
+
 async function commitChanges(message, files) {
   const base = `/repos/${enc(admin.owner)}/${enc(admin.repo)}`;
-  const ref = await gh(`${base}/git/ref/heads/${enc(admin.branch)}`);
-  if (ref.notFound) throw new Error('Branch not found: ' + admin.branch);
-  const baseSha = ref.object.sha;
-  const baseCommit = await gh(`${base}/git/commits/${baseSha}`);
-  const baseTree = baseCommit.tree.sha;
+  const MAX_RETRIES = 3;
+  let lastErr;
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const ref = await gh(`${base}/git/ref/heads/${enc(admin.branch)}`);
+      if (ref.notFound) throw new Error('Branch not found: ' + admin.branch);
+      const baseSha = ref.object.sha;
+      const baseCommit = await gh(`${base}/git/commits/${baseSha}`);
+      const baseTree = baseCommit.tree.sha;
 
-  const tree = [];
-  for (const f of files) {
-    if (f.content === null) {
-      tree.push({ path: f.path, mode: '100644', type: 'blob', sha: null });
-    } else if (f.base64) {
-      const blob = await gh(`${base}/git/blobs`, {
+      const tree = [];
+      for (const f of files) {
+        if (f.content === null) {
+          tree.push({ path: f.path, mode: '100644', type: 'blob', sha: null });
+        } else if (f.base64) {
+          const blob = await gh(`${base}/git/blobs`, {
+            method: 'POST',
+            body: JSON.stringify({ content: f.content, encoding: 'base64' }),
+          });
+          tree.push({ path: f.path, mode: '100644', type: 'blob', sha: blob.sha });
+        } else {
+          tree.push({ path: f.path, mode: '100644', type: 'blob', content: f.content });
+        }
+      }
+
+      const treeRes = await gh(`${base}/git/trees`, {
         method: 'POST',
-        body: JSON.stringify({ content: f.content, encoding: 'base64' }),
+        body: JSON.stringify({ base_tree: baseTree, tree }),
       });
-      tree.push({ path: f.path, mode: '100644', type: 'blob', sha: blob.sha });
-    } else {
-      tree.push({ path: f.path, mode: '100644', type: 'blob', content: f.content });
+      const commitRes = await gh(`${base}/git/commits`, {
+        method: 'POST',
+        body: JSON.stringify({ message, tree: treeRes.sha, parents: [baseSha] }),
+      });
+      await gh(`${base}/git/refs/heads/${enc(admin.branch)}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ sha: commitRes.sha, force: false }),
+      });
+      return commitRes.sha;
+    } catch (e) {
+      lastErr = e;
+      // branch moved underneath us (price-update workflow or another editor):
+      // re-read the fresh base and try again.
+      if (isFastForwardError(e) && attempt < MAX_RETRIES) continue;
+      throw e;
     }
   }
-
-  const treeRes = await gh(`${base}/git/trees`, {
-    method: 'POST',
-    body: JSON.stringify({ base_tree: baseTree, tree }),
-  });
-  const commitRes = await gh(`${base}/git/commits`, {
-    method: 'POST',
-    body: JSON.stringify({ message, tree: treeRes.sha, parents: [baseSha] }),
-  });
-  await gh(`${base}/git/refs/heads/${enc(admin.branch)}`, {
-    method: 'PATCH',
-    body: JSON.stringify({ sha: commitRes.sha, force: false }),
-  });
-  return commitRes.sha;
+  throw lastErr;
 }
 
 /* ---- connect / load --------------------------------------------------- */

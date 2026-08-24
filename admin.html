@@ -23,8 +23,8 @@
         <span class="admin-pill">Admin</span>
       </a>
       <div class="header-actions">
-        <span class="conn-status" id="connStatus">Not connected</span>
-        <button class="btn btn-ghost btn-sm" id="disconnectBtn" hidden>Disconnect</button>
+        <span class="conn-status" id="connStatus">Locked</span>
+        <button class="btn btn-ghost btn-sm" id="disconnectBtn" hidden>Lock</button>
         <button class="theme-btn" aria-label="Toggle theme" title="Toggle light/dark">
           <svg class="icon-sun" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
           <svg class="icon-moon" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -38,32 +38,22 @@
 
     <!-- Connect panel -->
     <section id="connectPanel" class="panel">
-      <h1>Connect to your repository</h1>
-      <p class="muted">Edits here are committed straight to your GitHub repo — prices, availability, images, everything. Share this page with whoever updates stock daily.</p>
+      <h1>Unlock the editor</h1>
+      <p class="muted">Enter the admin password to edit prices, availability, and images. GitHub access is handled securely on the server — no token needed in the browser.</p>
       <form id="connectForm" class="form-grid" autocomplete="off">
-        <label>GitHub owner (username/org)
-          <input id="cOwner" type="text" placeholder="e.g. yourname" required>
-        </label>
-        <label>Repository name
-          <input id="cRepo" type="text" placeholder="e.g. coretune" required>
-        </label>
-        <label>Branch
-          <input id="cBranch" type="text" value="main" required>
-        </label>
-        <label class="span-2">Access token (fine-grained, <strong>Contents: read &amp; write</strong>)
-          <input id="cToken" type="password" placeholder="github_pat_…" required autocomplete="new-password">
+        <label class="span-2">Admin password
+          <input id="cPass" type="password" placeholder="password" required autocomplete="current-password">
         </label>
         <div class="span-2 form-actions">
-          <button class="btn btn-primary" type="submit">Connect</button>
+          <button class="btn btn-primary" type="submit">Unlock</button>
         </div>
       </form>
       <details class="help">
-        <summary>How to make a token (one-time)</summary>
+        <summary>How this works</summary>
         <ol>
-          <li>GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token.</li>
-          <li><strong>Repository access:</strong> Only select this repository.</li>
-          <li><strong>Permissions:</strong> Contents → Read and write.</li>
-          <li>Generate, copy the token, paste above. It is stored only in this browser (localStorage), never sent anywhere but GitHub.</li>
+          <li>The owner sets the password and GitHub access in Netlify: <strong>Site settings → Environment variables</strong> → add <code>ADMIN_PASSWORD</code> and <code>GITHUB_PAT</code>.</li>
+          <li>Enter the shared password here once — it's remembered on this device.</li>
+          <li>Saving sends your changes to a serverless function that commits to GitHub with the owner's token. The token never touches a browser.</li>
         </ol>
       </details>
     </section>

@@ -148,6 +148,17 @@
   },
   {
     "id": "pmt6q4bbk9zp9",
+    "name": "jingli puff",
+    "category": "cable",
+    "price": 200,
+    "availability": "preorder",
+    "stock": 0,
+    "image": "",
+    "specs": [],
+    "searchKeys": []
+  },
+  {
+    "id": "pmt6q4hblgfpt",
     "name": "",
     "category": "",
     "price": 0,

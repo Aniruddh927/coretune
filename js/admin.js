@@ -6,7 +6,7 @@
    ========================================================================== */
 
 const admin = {
-  token: '',
+  password: '',
   owner: '',
   repo: '',
   branch: 'main',
@@ -17,7 +17,7 @@ const admin = {
   dirty: false,
 };
 
-const TOKEN_KEY = 'gw_admin_token';
+const PASS_KEY = 'ct_admin_pass';
 const els = {};
 
 const AVAIL_OPTIONS = ['in_stock', 'low_stock', 'out_of_stock', 'preorder'];
@@ -45,7 +45,6 @@ function enc(s) { return encodeURIComponent(String(s)); }
 
 async function gh(path, opts = {}) {
   const headers = {
-    Authorization: 'Bearer ' + admin.token,
     Accept: 'application/vnd.github+json',
     'X-GitHub-Api-Version': '2022-11-28',
   };
@@ -86,59 +85,15 @@ async function listImages() {
   return data.filter((f) => f.type === 'file').map((f) => ({ name: f.name, path: f.path, sha: f.sha }));
 }
 
-function isFastForwardError(e) {
-  return /fast.?forward|non-fast|behind|rejected|reference update/i.test(String((e && e.message) || ''));
-}
-
-async function commitChanges(message, files) {
-  const base = `/repos/${enc(admin.owner)}/${enc(admin.repo)}`;
-  const MAX_RETRIES = 3;
-  let lastErr;
-  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-    try {
-      const ref = await gh(`${base}/git/ref/heads/${enc(admin.branch)}`);
-      if (ref.notFound) throw new Error('Branch not found: ' + admin.branch);
-      const baseSha = ref.object.sha;
-      const baseCommit = await gh(`${base}/git/commits/${baseSha}`);
-      const baseTree = baseCommit.tree.sha;
-
-      const tree = [];
-      for (const f of files) {
-        if (f.content === null) {
-          tree.push({ path: f.path, mode: '100644', type: 'blob', sha: null });
-        } else if (f.base64) {
-          const blob = await gh(`${base}/git/blobs`, {
-            method: 'POST',
-            body: JSON.stringify({ content: f.content, encoding: 'base64' }),
-          });
-          tree.push({ path: f.path, mode: '100644', type: 'blob', sha: blob.sha });
-        } else {
-          tree.push({ path: f.path, mode: '100644', type: 'blob', content: f.content });
-        }
-      }
-
-      const treeRes = await gh(`${base}/git/trees`, {
-        method: 'POST',
-        body: JSON.stringify({ base_tree: baseTree, tree }),
-      });
-      const commitRes = await gh(`${base}/git/commits`, {
-        method: 'POST',
-        body: JSON.stringify({ message, tree: treeRes.sha, parents: [baseSha] }),
-      });
-      await gh(`${base}/git/refs/heads/${enc(admin.branch)}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ sha: commitRes.sha, force: false }),
-      });
-      return commitRes.sha;
-    } catch (e) {
-      lastErr = e;
-      // branch moved underneath us (price-update workflow or another editor):
-      // re-read the fresh base and try again.
-      if (isFastForwardError(e) && attempt < MAX_RETRIES) continue;
-      throw e;
-    }
-  }
-  throw lastErr;
+async function commitViaFunction(message, files) {
+  const res = await fetch('/.netlify/functions/commit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: admin.password, message, files }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+  return data;
 }
 
 /* ---- connect / load --------------------------------------------------- */
@@ -161,9 +116,9 @@ async function loadConfig() {
     if (res.ok) {
       const site = await res.json();
       const g = site.github || {};
-      els.cOwner.value = g.owner || '';
-      els.cRepo.value = g.repo || '';
-      els.cBranch.value = g.branch || 'main';
+      admin.owner = g.owner || admin.owner;
+      admin.repo = g.repo || admin.repo;
+      admin.branch = g.branch || admin.branch;
       els.sName.value = site.storeName || '';
       els.sTagline.value = site.tagline || '';
       els.sCurrency.value = site.currency || '';
@@ -174,17 +129,13 @@ async function loadConfig() {
   } catch (e) { console.warn('site.json not available', e); }
 }
 
-async function connect() {
-  admin.owner = els.cOwner.value.trim();
-  admin.repo = els.cRepo.value.trim();
-  admin.branch = els.cBranch.value.trim() || 'main';
-  admin.token = els.cToken.value.trim();
-
-  if (!admin.owner || !admin.repo || !admin.token) {
-    showToast('Owner, repo and token are required');
+async function unlock() {
+  admin.password = els.cPass.value.trim();
+  if (!admin.password) {
+    showToast('Enter the admin password');
     return;
   }
-  localStorage.setItem(TOKEN_KEY, admin.token);
+  localStorage.setItem(PASS_KEY, admin.password);
 
   try {
     const [siteText, prodText] = await Promise.all([
@@ -200,16 +151,12 @@ async function connect() {
       admin.products.map((p) => p.image).filter((im) => typeof im === 'string' && im.startsWith('images/')),
     );
 
-    // sync settings inputs from repo (authoritative)
     els.sName.value = admin.site.storeName || '';
     els.sTagline.value = admin.site.tagline || '';
     els.sCurrency.value = admin.site.currency || '';
     els.sWhatsapp.value = admin.site.whatsapp || '';
     els.sEmail.value = admin.site.email || '';
     applyLogo(admin.site);
-    els.cOwner.value = admin.owner;
-    els.cRepo.value = admin.repo;
-    els.cBranch.value = admin.branch;
 
     els.connectPanel.hidden = true;
     els.editorPanel.hidden = false;
@@ -222,20 +169,20 @@ async function connect() {
     admin.dirty = false;
     updateDirty();
   } catch (e) {
-    showToast('Connect failed: ' + e.message);
+    showToast('Load failed: ' + e.message);
   }
 }
 
-function disconnect() {
-  localStorage.removeItem(TOKEN_KEY);
-  admin.token = '';
-  els.cToken.value = '';
+function lock() {
+  localStorage.removeItem(PASS_KEY);
+  admin.password = '';
+  els.cPass.value = '';
   admin.dirty = false;
   updateDirty();
   els.connectPanel.hidden = false;
   els.editorPanel.hidden = true;
   els.disconnectBtn.hidden = true;
-  els.connStatus.textContent = 'Not connected';
+  els.connStatus.textContent = 'Locked';
   els.connStatus.classList.remove('ok');
 }
 
@@ -448,7 +395,7 @@ async function save() {
     files.push({ path: 'data/products.json', content: JSON.stringify(admin.products.map(cleanProduct), null, 2) });
     files.push({ path: 'data/site.json', content: JSON.stringify(site, null, 2) });
 
-    await commitChanges('chore: update catalog via admin', files);
+    await commitViaFunction('chore: update catalog via admin', files);
 
     admin.site = site;
     admin.images = await listImages();
@@ -456,9 +403,14 @@ async function save() {
     admin.dirty = false;
     updateDirty();
     renderProducts();
-    showToast('Saved \u2014 deployed to GitHub Pages shortly');
+    showToast('Saved \u2014 deployed shortly');
   } catch (e) {
-    showToast('Save failed: ' + e.message);
+    if (/password/i.test(String(e.message))) {
+      lock();
+      showToast('Wrong password \u2014 enter it again');
+    } else {
+      showToast('Save failed: ' + e.message);
+    }
   } finally {
     btn.disabled = false;
     btn.textContent = old;
@@ -474,10 +426,10 @@ function updateDirty() {
 function bind() {
   els.connectForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    connect();
+    unlock();
   });
 
-  els.disconnectBtn.addEventListener('click', disconnect);
+  els.disconnectBtn.addEventListener('click', lock);
   els.addProductBtn.addEventListener('click', addProduct);
   els.saveBtn.addEventListener('click', save);
 
@@ -518,10 +470,7 @@ function init() {
   els.connectPanel = $('connectPanel');
   els.editorPanel = $('editorPanel');
   els.connectForm = $('connectForm');
-  els.cOwner = $('cOwner');
-  els.cRepo = $('cRepo');
-  els.cBranch = $('cBranch');
-  els.cToken = $('cToken');
+  els.cPass = $('cPass');
   els.connStatus = $('connStatus');
   els.disconnectBtn = $('disconnectBtn');
   els.addProductBtn = $('addProductBtn');
@@ -535,12 +484,15 @@ function init() {
   els.brandMark = $('brandMark');
 
   loadConfig().then(() => {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (token) els.cToken.value = token;
-    // auto-connect if we already have token + repo info
-    if (token && els.cOwner.value && els.cRepo.value) {
-      admin.token = token;
-      connect();
+    const pass = localStorage.getItem(PASS_KEY);
+    if (pass) {
+      els.cPass.value = pass;
+      admin.password = pass;
+      unlock();
+    } else {
+      els.connectPanel.hidden = false;
+      els.editorPanel.hidden = true;
+      els.disconnectBtn.hidden = true;
     }
   });
   bind();
